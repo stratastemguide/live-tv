@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Monitor — Live Global News Dashboard</title>
+    <meta name="description" content="Watch live news channels from around the world in one place. Real-time global news monitoring dashboard with multiple streams.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/globe.gl" defer></script>
+</head>
+<body>
+    <!-- Scanline overlay -->
+    <div class="scanlines" aria-hidden="true"></div>
+    
+    <!-- Ambient glow blobs -->
+    <div class="ambient-blob blob-1" aria-hidden="true"></div>
+    <div class="ambient-blob blob-2" aria-hidden="true"></div>
+    <div class="ambient-blob blob-3" aria-hidden="true"></div>
+
+    <!-- ========== HEADER ========== -->
+    <header id="main-header">
+        <div class="header-left">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="20" stroke="url(#logo-grad)" stroke-width="2" fill="none"/>
+                        <ellipse cx="24" cy="24" rx="10" ry="20" stroke="url(#logo-grad)" stroke-width="1.5" fill="none"/>
+                        <line x1="4" y1="24" x2="44" y2="24" stroke="url(#logo-grad)" stroke-width="1.2"/>
+                        <line x1="8" y1="14" x2="40" y2="14" stroke="url(#logo-grad)" stroke-width="0.8" opacity="0.6"/>
+                        <line x1="8" y1="34" x2="40" y2="34" stroke="url(#logo-grad)" stroke-width="0.8" opacity="0.6"/>
+                        <circle cx="24" cy="24" r="3" fill="url(#logo-grad)"/>
+                        <defs>
+                            <linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48">
+                                <stop offset="0%" stop-color="#00f0ff"/>
+                                <stop offset="100%" stop-color="#8b5cf6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>WORLD<span class="accent">MONITOR</span></h1>
+                    <p class="tagline">LIVE GLOBAL INTELLIGENCE</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="world-clocks" id="world-clocks">
+                <div class="clock-item" data-timezone="America/New_York">
+                    <span class="clock-city">NEW YORK</span>
+                    <span class="clock-time" id="clock-ny">--:--:--</span>
+                </div>
+                <div class="clock-divider"></div>
+                <div class="clock-item" data-timezone="Europe/London">
+                    <span class="clock-city">LONDON</span>
+                    <span class="clock-time" id="clock-ldn">--:--:--</span>
+                </div>
+                <div class="clock-divider"></div>
+                <div class="clock-item" data-timezone="Asia/Dubai">
+                    <span class="clock-city">DUBAI</span>
+                    <span class="clock-time" id="clock-dub">--:--:--</span>
+                </div>
+                <div class="clock-divider"></div>
+                <div class="clock-item" data-timezone="Asia/Kolkata">
+                    <span class="clock-city">MUMBAI</span>
+                    <span class="clock-time" id="clock-mum">--:--:--</span>
+                </div>
+                <div class="clock-divider"></div>
+                <div class="clock-item" data-timezone="Asia/Tokyo">
+                    <span class="clock-city">TOKYO</span>
+                    <span class="clock-time" id="clock-tok">--:--:--</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="live-indicator" id="live-indicator">
+                <span class="live-dot"></span>
+                <span class="live-text">LIVE</span>
+            </div>
+            <div class="status-badge" id="status-badge">
+                <span class="status-icon">◈</span>
+                <span id="channel-count">0</span> CHANNELS
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== NAVIGATION TABS ========== -->
+    <nav id="main-nav">
+        <div class="nav-track">
+            <div class="nav-glow" id="nav-glow"></div>
+            <button class="nav-tab active" data-category="all" id="tab-all">
+                <span class="tab-icon">◉</span>
+                <span class="tab-label">All Channels</span>
+                <span class="tab-count" data-count="all">0</span>
+            </button>
+            <button class="nav-tab" data-category="breaking" id="tab-breaking">
+                <span class="tab-icon">⚡</span>
+                <span class="tab-label">Breaking News</span>
+                <span class="tab-count" data-count="breaking">0</span>
+            </button>
+            <button class="nav-tab" data-category="world" id="tab-world">
+                <span class="tab-icon">🌍</span>
+                <span class="tab-label">World News</span>
+                <span class="tab-count" data-count="world">0</span>
+            </button>
+            <button class="nav-tab" data-category="business" id="tab-business">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Business</span>
+                <span class="tab-count" data-count="business">0</span>
+            </button>
+            <button class="nav-tab" data-category="tech" id="tab-tech">
+                <span class="tab-icon">🔬</span>
+                <span class="tab-label">Tech & Science</span>
+                <span class="tab-count" data-count="tech">0</span>
+            </button>
+            <button class="nav-tab" data-category="regional" id="tab-regional">
+                <span class="tab-icon">🗺️</span>
+                <span class="tab-label">Regional</span>
+                <span class="tab-count" data-count="regional">0</span>
+            </button>
+            <button class="nav-tab" data-category="intel" id="tab-intel">
+                <span class="tab-icon">📡</span>
+                <span class="tab-label">Mission Intel</span>
+            </button>
+            <button class="nav-tab" data-category="earth" id="tab-earth">
+                <span class="tab-icon">🌎</span>
+                <span class="tab-label">Earth Monitor</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MARKET TICKER ========== -->
+    <div class="market-ticker" id="market-ticker">
+        <div class="ticker-content" id="crypto-ticker-track">
+            <!-- Crypto prices injected by JS -->
+            <span class="ticker-item">LOADING MARKET DATA...</span>
+        </div>
+    </div>
+
+    <!-- ========== TOOLBAR ========== -->
+    <div class="toolbar" id="toolbar">
+        <div class="toolbar-left">
+            <div class="view-switcher">
+                <button class="view-btn active" data-view="grid" id="view-grid" title="Grid View">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="7" height="7" rx="1" fill="currentColor"/><rect x="10" y="1" width="7" height="7" rx="1" fill="currentColor"/><rect x="1" y="10" width="7" height="7" rx="1" fill="currentColor"/><rect x="10" y="10" width="7" height="7" rx="1" fill="currentColor"/></svg>
+                </button>
+                <button class="view-btn" data-view="featured" id="view-featured" title="Featured View">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="11" height="16" rx="1" fill="currentColor"/><rect x="14" y="1" width="3" height="7" rx="1" fill="currentColor"/><rect x="14" y="10" width="3" height="7" rx="1" fill="currentColor"/></svg>
+                </button>
+                <button class="view-btn" data-view="single" id="view-single" title="Single View">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="2" fill="currentColor"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="toolbar-center">
+            <div class="search-box" id="search-box">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="search-input" placeholder="Search channels..." autocomplete="off">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button class="toolbar-btn" id="btn-mute-all" title="Mute All">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            </button>
+            <button class="toolbar-btn" id="btn-fullscreen" title="Fullscreen">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main id="channels-grid" class="channels-grid view-grid">
+        <!-- Channels are injected by JavaScript -->
+    </main>
+
+    <!-- ========== INTEL VIEW ========== -->
+    <section id="intel-view" class="intel-view" style="display: none;">
+        <div class="intel-container">
+            <div class="intel-header">
+                <div class="intel-title">
+                    <span class="intel-icon">🛰️</span>
+                    <h2>GLOBAL INTELLIGENCE FEED</h2>
+                </div>
+                <div class="intel-clock">
+                    <span class="intel-time-label">MASTER TIME (UTC)</span>
+                    <span id="master-clock">00:00:00</span>
+                </div>
+            </div>
+            <div class="intel-map-wrap">
+                <div id="intel-map-loader" class="shimmer"></div>
+                <iframe id="windy-map" src="" frameborder="0"></iframe>
+            </div>
+            <div class="intel-footer">
+                <div class="intel-legend">
+                    <span class="legend-item"><span class="dot wind"></span> Wind Speed</span>
+                    <span class="legend-item"><span class="dot temp"></span> Temperature</span>
+                    <span class="legend-item"><span class="dot cloud"></span> Cloud Cover</span>
+                </div>
+                <div class="weather-instrumentation" id="weather-instrumentation">
+                    <div class="weather-loading">SRI LANKA SENSORS...</div>
+                </div>
+                <div class="weather-forecast" id="weather-forecast">
+                    <!-- Forecast items injected by JS -->
+                </div>
+                <div class="intel-coords">
+                    LOC: <span class="cyan-text">COLOMBO, LK</span> | 
+                    COORD: <span id="intel-lat">6.9271° N</span>, <span id="intel-lon">79.8612° E</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== EARTH VIEW ========== -->
+    <section id="earth-view" class="earth-view" style="display: none;">
+        <div class="earth-container">
+            <!-- Globe.gl will render here -->
+            <div id="globe-viz"></div>
+            
+            <!-- HUD Overlays -->
+            <div class="earth-hud earth-hud-top">
+                <div class="hud-box">
+                    <span class="hud-label">SATELLITE SECTOR</span>
+                    <span class="hud-value">DELTA-9-INTEL</span>
+                </div>
+                <div class="hud-box">
+                    <span class="hud-label">SIGNAL STRENGTH</span>
+                    <div class="hud-signal">
+                        <span class="sig-bar active"></span>
+                        <span class="sig-bar active"></span>
+                        <span class="sig-bar active"></span>
+                        <span class="sig-bar active"></span>
+                        <span class="sig-bar pulse"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="earth-hud earth-hud-bottom">
+                <div class="hud-box">
+                    <span class="hud-label">AUTO-ROTATION</span>
+                    <span class="hud-value status-on">ACTIVE</span>
+                </div>
+                <div class="hud-box">
+                    <span class="hud-label">DATA POINTS</span>
+                    <span class="hud-value" id="earth-points-count">0</span>
+                </div>
+            </div>
+
+            <div class="earth-side-stats">
+                <div class="stat-line">SYSTEM: <span class="cyan-text">STABLE</span></div>
+                <div class="stat-line">FEED: <span class="cyan-text">ENCRYPTED</span></div>
+                <div class="stat-line">LINK: <span class="cyan-text">ACTIVE</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEATURED PLAYER (for single/featured views) ========== -->
+    <div class="featured-overlay" id="featured-overlay" style="display:none;">
+        <div class="featured-player-wrap">
+            <button class="featured-close" id="featured-close" title="Close">✕</button>
+            <div class="featured-video" id="featured-video"></div>
+            <div class="featured-info">
+                <h2 id="featured-title">Channel Name</h2>
+                <p id="featured-desc">Channel description</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer id="main-footer">
+        <div class="footer-inner">
+            <div class="footer-left">
+                <span class="footer-logo">WORLD<span class="accent">MONITOR</span></span>
+                <span class="footer-sep">•</span>
+                <span class="footer-copy">© 2026 All streams are property of their respective owners.</span>
+            </div>
+            <div class="footer-right">
+                <span class="footer-status">
+                    <span class="pulse-dot"></span>
+                    System Online
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
